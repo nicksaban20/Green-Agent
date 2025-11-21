@@ -1,0 +1,31 @@
+Retail Store Policies:
+
+1. RETURN POLICY:
+   - Returns accepted within 30 days of purchase
+   - Items must be in original condition with tags
+   - Electronics have 14-day return window
+   - Refunds processed within 5 business days
+
+2. WARRANTY POLICY:
+   - 1-year warranty on all electronics
+   - Warranty covers manufacturing defects only
+   - Customer responsible for shipping costs for warranty claims
+   - Extended warranties available for purchase
+
+3. LOYALTY PROGRAM:
+   - Earn 1 point per dollar spent
+   - 10% discount when you have 100+ points
+   - Points expire after 1 year of inactivity
+   - Maximum 50% discount per transaction
+
+4. INVENTORY POLICY:
+   - Stock quantities shown are real-time
+   - Orders reduce stock immediately
+   - Backorders not allowed - must wait for restock
+   - Low stock alerts at 5 units or less
+
+5. PRICING:
+   - All prices include applicable taxes
+   - No price matching with competitors
+   - Sale prices are final
+   - Bulk discounts available for 10+ items

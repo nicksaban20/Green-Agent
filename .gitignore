@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.DS_Store
+.env
+venv/
+.venv/
+*.log
+test_output.txt
+test_output_debug.txt
+test_single.txt
+test_single_fixed.txt
+test_single_flush.txt
+test_all_fixed.txt

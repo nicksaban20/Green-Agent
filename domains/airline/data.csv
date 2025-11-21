@@ -1,0 +1,16 @@
+users,1,John Doe,john@example.com,555-0123
+users,2,Jane Smith,jane@example.com,555-0124
+users,3,Bob Johnson,bob@example.com,555-0125
+
+flights,101,LAX,2025-11-01,299.99,50
+flights,102,LAX,2025-11-02,349.99,30
+flights,103,NYC,2025-11-01,199.99,40
+flights,104,NYC,2025-11-03,249.99,25
+flights,105,CHI,2025-11-01,179.99,60
+
+bookings,1,1,101,2025-10-15,confirmed
+bookings,2,2,103,2025-10-16,confirmed
+
+policies,1,cancellation,Cancellations within 24 hours get full refund,within_24_hours
+policies,2,change_fee,Changes cost $50 fee,any_time
+policies,3,booking_limit,Maximum 3 bookings per user,per_user

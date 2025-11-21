@@ -1,0 +1,80 @@
+[
+  {
+    "id": "airline_success_1",
+    "description": "Book a flight to LAX successfully",
+    "user_goal": "I need to fly to Los Angeles on Nov 1st",
+    "initial_state": {
+      "users": [{"id": 1, "name": "John Doe", "email": "john@example.com"}],
+      "flights": [{"id": 101, "destination": "LAX", "departure_date": "2025-11-01", "price": 299.99, "available_seats": 50}],
+      "bookings": []
+    },
+    "goal_state": {
+      "bookings": [{"user_id": 1, "flight_id": 101, "status": "confirmed"}]
+    },
+    "expected_success": true,
+    "mock_behavior": "success_simple"
+  },
+  {
+    "id": "airline_failure_1",
+    "description": "Violate cancellation policy",
+    "user_goal": "Cancel my flight that I booked 3 days ago",
+    "initial_state": {
+      "users": [{"id": 1, "name": "John Doe", "email": "john@example.com"}],
+      "flights": [{"id": 101, "destination": "LAX", "departure_date": "2025-11-01", "price": 299.99, "available_seats": 50}],
+      "bookings": [{"id": 1, "user_id": 1, "flight_id": 101, "booking_date": "2025-10-15", "status": "confirmed"}]
+    },
+    "goal_state": {
+      "bookings": [{"id": 1, "user_id": 1, "flight_id": 101, "status": "cancelled"}]
+    },
+    "expected_success": false,
+    "mock_behavior": "violate_policy"
+  },
+  {
+    "id": "airline_success_2",
+    "description": "Multi-step booking with policy check",
+    "user_goal": "I want to book a flight but first check the cancellation policy",
+    "initial_state": {
+      "users": [{"id": 2, "name": "Jane Smith", "email": "jane@example.com"}],
+      "flights": [{"id": 102, "destination": "LAX", "departure_date": "2025-11-02", "price": 349.99, "available_seats": 30}],
+      "bookings": []
+    },
+    "goal_state": {
+      "bookings": [{"user_id": 2, "flight_id": 102, "status": "confirmed"}]
+    },
+    "expected_success": true,
+    "mock_behavior": "success_with_policy_check"
+  },
+  {
+    "id": "airline_failure_2",
+    "description": "Book non-existent flight",
+    "user_goal": "Book flight 999 to Mars",
+    "initial_state": {
+      "users": [{"id": 1, "name": "John Doe", "email": "john@example.com"}],
+      "flights": [{"id": 101, "destination": "LAX", "departure_date": "2025-11-01", "price": 299.99, "available_seats": 50}],
+      "bookings": []
+    },
+    "goal_state": {
+      "bookings": []
+    },
+    "expected_success": false,
+    "mock_behavior": "book_nonexistent_flight"
+  },
+  {
+    "id": "airline_success_3",
+    "description": "Search and compare flights",
+    "user_goal": "I need to go to NYC, show me all available flights",
+    "initial_state": {
+      "users": [{"id": 3, "name": "Bob Johnson", "email": "bob@example.com"}],
+      "flights": [
+        {"id": 103, "destination": "NYC", "departure_date": "2025-11-01", "price": 199.99, "available_seats": 40},
+        {"id": 104, "destination": "NYC", "departure_date": "2025-11-03", "price": 249.99, "available_seats": 25}
+      ],
+      "bookings": []
+    },
+    "goal_state": {
+      "bookings": [{"user_id": 3, "flight_id": 103, "status": "confirmed"}]
+    },
+    "expected_success": true,
+    "mock_behavior": "search_and_book"
+  }
+]

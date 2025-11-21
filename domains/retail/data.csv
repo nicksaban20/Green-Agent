@@ -1,0 +1,17 @@
+customers,1,Alice Johnson,alice@example.com,555-0201,150
+customers,2,Bob Wilson,bob@example.com,555-0202,75
+customers,3,Carol Davis,carol@example.com,555-0203,200
+
+products,201,Laptop Pro,Electronics,999.99,10,High-performance laptop
+products,202,Wireless Mouse,Electronics,29.99,50,Ergonomic wireless mouse
+products,203,Coffee Maker,Appliances,89.99,15,Programmable coffee maker
+products,204,Desk Chair,Furniture,199.99,8,Ergonomic office chair
+products,205,Notebook Set,Office,12.99,100,Set of 5 notebooks
+
+orders,1,1,2025-10-15,1029.98,completed
+order_items,1,1,201,1,999.99
+order_items,2,1,202,1,29.99
+
+policies,1,return_window,Returns accepted within 30 days,within_30_days
+policies,2,warranty,1-year warranty on electronics,electronics_only
+policies,3,loyalty_discount,10% discount for 100+ loyalty points,100_points_minimum

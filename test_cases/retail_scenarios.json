@@ -1,0 +1,85 @@
+[
+  {
+    "id": "retail_success_1",
+    "description": "Order electronics successfully",
+    "user_goal": "I want to buy a laptop",
+    "initial_state": {
+      "customers": [{"id": 1, "name": "Alice Johnson", "email": "alice@example.com", "loyalty_points": 150}],
+      "products": [{"id": 201, "name": "Laptop Pro", "category": "Electronics", "price": 999.99, "stock_quantity": 10}],
+      "orders": []
+    },
+    "goal_state": {
+      "orders": [{"customer_id": 1, "status": "completed"}],
+      "order_items": [{"order_id": 1, "product_id": 201, "quantity": 1}]
+    },
+    "expected_success": true,
+    "mock_behavior": "success_simple"
+  },
+  {
+    "id": "retail_failure_1",
+    "description": "Return item outside policy window",
+    "user_goal": "I want to return this laptop I bought 45 days ago",
+    "initial_state": {
+      "customers": [{"id": 1, "name": "Alice Johnson", "email": "alice@example.com", "loyalty_points": 150}],
+      "products": [{"id": 201, "name": "Laptop Pro", "category": "Electronics", "price": 999.99, "stock_quantity": 10}],
+      "orders": [{"id": 1, "customer_id": 1, "order_date": "2025-09-01", "total_amount": 999.99, "status": "completed"}],
+      "order_items": [{"id": 1, "order_id": 1, "product_id": 201, "quantity": 1, "unit_price": 999.99}]
+    },
+    "goal_state": {
+      "orders": [{"id": 1, "customer_id": 1, "status": "completed"}]
+    },
+    "expected_success": false,
+    "mock_behavior": "violate_return_policy"
+  },
+  {
+    "id": "retail_success_2",
+    "description": "Use loyalty discount",
+    "user_goal": "I have loyalty points, can I get a discount on this mouse?",
+    "initial_state": {
+      "customers": [{"id": 2, "name": "Bob Wilson", "email": "bob@example.com", "loyalty_points": 150}],
+      "products": [{"id": 202, "name": "Wireless Mouse", "category": "Electronics", "price": 29.99, "stock_quantity": 50}],
+      "orders": []
+    },
+    "goal_state": {
+      "orders": [{"customer_id": 2, "status": "completed"}],
+      "order_items": [{"order_id": 1, "product_id": 202, "quantity": 1}]
+    },
+    "expected_success": true,
+    "mock_behavior": "success_with_loyalty"
+  },
+  {
+    "id": "retail_failure_2",
+    "description": "Order out of stock item",
+    "user_goal": "I want to buy 100 laptops",
+    "initial_state": {
+      "customers": [{"id": 1, "name": "Alice Johnson", "email": "alice@example.com", "loyalty_points": 150}],
+      "products": [{"id": 201, "name": "Laptop Pro", "category": "Electronics", "price": 999.99, "stock_quantity": 10}],
+      "orders": []
+    },
+    "goal_state": {
+      "orders": []
+    },
+    "expected_success": false,
+    "mock_behavior": "order_insufficient_stock"
+  },
+  {
+    "id": "retail_success_3",
+    "description": "Search products by category",
+    "user_goal": "Show me all electronics you have",
+    "initial_state": {
+      "customers": [{"id": 3, "name": "Carol Davis", "email": "carol@example.com", "loyalty_points": 200}],
+      "products": [
+        {"id": 201, "name": "Laptop Pro", "category": "Electronics", "price": 999.99, "stock_quantity": 10},
+        {"id": 202, "name": "Wireless Mouse", "category": "Electronics", "price": 29.99, "stock_quantity": 50},
+        {"id": 203, "name": "Coffee Maker", "category": "Appliances", "price": 89.99, "stock_quantity": 15}
+      ],
+      "orders": []
+    },
+    "goal_state": {
+      "orders": [{"customer_id": 3, "status": "completed"}],
+      "order_items": [{"order_id": 1, "product_id": 201, "quantity": 1}]
+    },
+    "expected_success": true,
+    "mock_behavior": "search_and_order"
+  }
+]

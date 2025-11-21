@@ -1,0 +1,26 @@
+Airline Booking Policies:
+
+1. CANCELLATION POLICY:
+   - Cancellations within 24 hours of booking: Full refund
+   - Cancellations after 24 hours: 50% refund
+   - No refunds for same-day cancellations
+
+2. CHANGE POLICY:
+   - Flight changes cost $50 fee
+   - Changes must be made at least 2 hours before departure
+   - No changes allowed for flights departing within 2 hours
+
+3. BOOKING LIMITS:
+   - Maximum 3 active bookings per user
+   - Bookings are confirmed immediately upon payment
+   - No holds or pending bookings allowed
+
+4. SEAT AVAILABILITY:
+   - Flights show real-time seat availability
+   - Bookings reduce available seats immediately
+   - Overbooking is not allowed
+
+5. PRICING:
+   - Prices are fixed at time of booking
+   - No price matching or adjustments after booking
+   - All prices include taxes and fees
