@@ -47,7 +47,7 @@ gcloud run deploy tau-bench-green \
   --allow-unauthenticated \
   --memory 2Gi \
   --timeout 300 \
-  --port 8001 \
+  --port 8010 \
   --set-env-vars HOST=0.0.0.0,AGENT_PORT=8001
 
 # Get the deployment URL
