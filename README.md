@@ -1,121 +1,87 @@
-# Tau-Bench Green Agent for AgentBeats
+# τ-bench Green Agent
 
-An agentified version of the Tau-Bench benchmark for evaluating agent tool-use capabilities.
-
-## Overview
-
-This project implements a green agent (evaluation agent) that tests white agents on the Tau-Bench benchmark across airline and retail domains.
+An evaluation agent for the [τ-bench](https://github.com/sierra-research/tau-bench) benchmark, designed to test AI agents' tool-use capabilities across airline and retail domains.
 
 ## Features
 
-- ✅ A2A-compatible green agent for evaluation
-- ✅ Support for both airline and retail domains
-- ✅ Batch evaluation across multiple scenarios
-- ✅ AgentBeats platform integration
-- ✅ Local testing with mock white agent
-- ✅ Comprehensive metrics tracking
+- **Dual-domain evaluation**: Tests agents in airline and retail scenarios
+- **AgentBeats compatible**: Integrates with the AgentBeats V2 platform
+- **Comprehensive metrics**: Tracks success rate, completion time, and interaction turns
+- **Mock & LLM agents**: Includes both mock agent (for testing) and Claude LLM agent implementations
 
-## Project Structure
+## Quick Start
 
-```
-project/
-├── run.sh                  # AgentBeats launch script
-├── requirements.txt        # Python dependencies
-├── Procfile               # Container entry point
-├── launcher.py            # Local testing orchestrator
-├── green_agent/
-│   ├── agent.py          # Main green agent
-│   └── environment.py    # Test environment
-├── white_agent/
-│   └── mock_agent.py     # Mock agent for testing
-├── domains/
-│   ├── airline/          # Airline domain files
-│   └── retail/           # Retail domain files
-└── test_cases/
-    ├── airline_scenarios.json
-    └── retail_scenarios.json
-```
-
-## Installation
+### Installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Local Testing
-
-### Run with launcher (recommended)
+### Local Testing
 
 ```bash
-# Single scenario
+# Test with mock white agent (recommended for testing)
 python launcher.py --domain airline --scenario airline_success_1
 
-# All scenarios
+# Test with Claude LLM agent
+python launcher.py --domain airline --scenario airline_success_1 --llm
+
+# Run all scenarios
 python launcher.py --all
 ```
 
-### Run with AgentBeats controller
+### Running with AgentBeats Controller
 
 ```bash
 agentbeats run_ctrl
-# Visit http://localhost:8080 for management UI
+# Visit http://localhost:8010 for management UI
+```
+
+## Project Structure
+
+```
+tau_bench_demo/
+├── run.sh                     # AgentBeats launch script
+├── Procfile                   # Container entry point
+├── requirements.txt           # Dependencies
+├── launcher.py                # Local testing orchestrator
+├── green_agent/
+│   ├── agent.py              # Main evaluation agent
+│   └── environment.py        # Test environment manager
+├── white_agent/
+│   ├── mock_agent.py         # Mock agent for testing
+│   └── llm_agent.py          # Claude LLM agent
+├── domains/
+│   ├── airline/              # Airline domain tools & data
+│   └── retail/               # Retail domain tools & data
+└── test_cases/               # Evaluation scenarios
+    ├── airline_scenarios.json
+    └── retail_scenarios.json
 ```
 
 ## Deployment
 
-### Option 1: Cloud Run (Recommended)
+See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed deployment instructions using:
+- Google Cloud Run (recommended)
+- Manual VM deployment
+- Docker containers
 
-```bash
-gcloud run deploy tau-bench-green \
-  --source . \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
-```
-
-### Option 2: Manual VM Deployment
-
-1. Provision a VM with public IP
-2. Install dependencies
-3. Run: `./run.sh`
-4. Configure HTTPS with nginx/certbot
-
-## AgentBeats Integration
-
-### Register Your Agent
+## AgentBeats Registration
 
 1. Deploy your agent with HTTPS
-2. Go to AgentBeats dashboard
-3. Click "Create Agent"
-4. Fill in:
-   - Name: "Tau-Bench Green Agent"
-   - Controller URL: Your deployed URL
-   - Check "Is Green Agent"
-5. Submit
+2. Go to [AgentBeats V2](https://v2.agentbeats.org)
+3. Register your agent with the controller URL
+4. Your agent is now available for evaluation!
 
-### Run Assessments
+## Domains & Scenarios
 
-Once registered, others can evaluate their agents against yours through the AgentBeats platform.
-
-## Metrics
-
-The green agent reports:
-
-- **Success Rate**: Percentage of successfully completed tasks
-- **Average Time**: Mean completion time per task
-- **Turns**: Number of interaction turns per task
-
-## Domains
-
-### Airline
-
+### Airline Domain
 - Flight search and booking
-- Cancellation policy handling
+- Cancellation policies
 - Multi-step booking workflows
 
-### Retail
-
-- Product search
+### Retail Domain
+- Product search and filtering
 - Order placement
 - Return policy handling
 - Loyalty program integration
@@ -124,28 +90,23 @@ The green agent reports:
 
 ### Adding New Scenarios
 
-1. Add scenario to `test_cases/{domain}_scenarios.json`
+1. Add to `test_cases/{domain}_scenarios.json`
 2. Update test data in `domains/{domain}/data.csv`
-3. Test locally with launcher
+3. Test with `python launcher.py --domain {domain} --scenario {scenario_id}`
 
 ### Modifying Tools
 
 Edit `domains/{domain}/tools.py` to add or modify available tools.
 
-## Troubleshooting
+## Testing
 
-**Issue**: Agent won't start
-- Check port 8001 is available
-- Verify all dependencies installed
-- Check logs for errors
+```bash
+# Local integration test
+python test_agent.py http://localhost:8001 http://localhost:8002
 
-**Issue**: Evaluation times out
-- Increase timeout in agent.py (default: 30s)
-- Check white agent is responding
-
-**Issue**: Controller can't find agent
-- Ensure `run.sh` is executable
-- Check HOST and AGENT_PORT environment variables
+# Test deployed agent
+python test_agent.py https://your-url.com http://localhost:8002
+```
 
 ## License
 
@@ -153,6 +114,4 @@ MIT
 
 ## Contact
 
-For questions: [your-email]@berkeley.edu
-
-
+agentbeats@berkeley.edu

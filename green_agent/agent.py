@@ -13,15 +13,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from green_agent.environment import Environment
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-
-
 
 class GreenAgent:
     
@@ -179,17 +175,14 @@ class GreenAgent:
     
     def _extract_json_from_response(self, response_text: str) -> Dict[str, Any]:
         """Extract JSON from response, handling <json>...</json> tags."""
-        # Try to find JSON in <json> tags
         json_match = re.search(r'<json>(.*?)</json>', response_text, re.DOTALL)
         if json_match:
             json_str = json_match.group(1).strip()
             return json.loads(json_str)
         
-        # Try to parse the entire response as JSON
         try:
             return json.loads(response_text.strip())
         except json.JSONDecodeError:
-            # Try to find JSON object in the text
             json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group(0))
@@ -291,11 +284,9 @@ User message: {user_goal}"""
             response_text = response.text
             logger.debug(f"Received from white agent: {response_text[:100]}...")
             
-            # Try to parse as A2A format first
             try:
                 response_json = json.loads(response_text)
                 
-                # Check for A2A SendMessageSuccessResponse format
                 if 'result' in response_json:
                     result = response_json['result']
                     if 'parts' in result and len(result['parts']) > 0:
@@ -305,14 +296,12 @@ User message: {user_goal}"""
                         elif 'root' in first_part and 'text' in first_part['root']:
                             return first_part['root']['text']
                 
-                # Check for simple message format
                 if 'message' in response_json:
                     return response_json['message']
                     
             except json.JSONDecodeError:
                 pass
             
-            # Fall back to raw response text
             return response_text
             
         except requests.RequestException as e:
@@ -354,7 +343,6 @@ def send_message():
         
         logger.info(f"Received message: {message[:200]}...")
         
-        # Check for batch evaluation request
         if "Run all scenarios" in message or "--all" in message:
             white_agent_url = None
             for line in message.split('\n'):
@@ -368,7 +356,6 @@ def send_message():
             result = green_agent.run_all_scenarios(white_agent_url)
             return jsonify(result)
         
-        # Single scenario evaluation
         if "Run tau-bench evaluation" in message or "Run τ-bench evaluation" in message:
             lines = message.split('\n')
             domain = None
@@ -414,7 +401,6 @@ def main():
     logger.info(f"Initializing green agent with domains path: {domains_path}")
     green_agent = GreenAgent(domains_path)
     
-    # Use environment variables for AgentBeats compatibility
     host = os.getenv('HOST', '0.0.0.0')
     port = int(os.getenv('AGENT_PORT', '8001'))
     

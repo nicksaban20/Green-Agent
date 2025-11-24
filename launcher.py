@@ -133,13 +133,11 @@ White agent URL: {self.white_agent_url}"""
         print("Testing controller integration...")
         
         try:
-            # Test controller status
             try:
                 response = requests.get(f"{self.green_agent_url}/status", timeout=5)
             except requests.RequestException:
                 pass
             
-            # Test agent card
             response = requests.get(f"{self.green_agent_url}/.well-known/agent-card.json", timeout=5)
             if response.status_code == 200:
                 print("✅ Agent card accessible")
@@ -147,7 +145,6 @@ White agent URL: {self.white_agent_url}"""
                 print(f"   Agent: {agent_card.get('name')}")
                 print(f"   Version: {agent_card.get('version')}")
             
-            # Test reset (if controller is running)
             try:
                 response = requests.post(f"{self.green_agent_url}/reset", timeout=5)
                 if response.status_code == 200:

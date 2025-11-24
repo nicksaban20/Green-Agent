@@ -6,9 +6,7 @@ __pycache__/
 venv/
 .venv/
 *.log
-test_output.txt
-test_output_debug.txt
-test_single.txt
-test_single_fixed.txt
-test_single_flush.txt
-test_all_fixed.txt
+test_output*.txt
+.ab/
+cloudflared.log
+controller.log
