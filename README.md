@@ -61,10 +61,11 @@ tau_bench_demo/
 
 ## Deployment
 
-See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed deployment instructions using:
-- Google Cloud Run (recommended)
-- Manual VM deployment
-- Docker containers
+See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for verified, step-by-step instructions. The guide covers:
+1. Starting the Cloudflare tunnel
+2. Configuring the Controller with the correct hostname
+3. Verifying and fixing agent state
+4. Registering on AgentBeats
 
 ## AgentBeats Registration
 
@@ -115,3 +116,5 @@ MIT
 ## Contact
 
 agentbeats@berkeley.edu
+
+

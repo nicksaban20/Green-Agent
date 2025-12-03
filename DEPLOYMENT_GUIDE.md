@@ -4,125 +4,78 @@
 
 - Python 3.8+
 - AgentBeats (`earthshaker`) installed
-- (Optional) Google Cloud SDK for Cloud Run deployment
+- `cloudflared` installed (for tunneling)
 
-## Deployment Methods
+## 🚀 Step-by-Step Deployment (Verified)
 
-### Option 1: Cloud Run (Recommended)
+Follow these steps exactly to deploy your agent.
+
+### 1. Start Tunnel & Get Hostname
+
+First, start the tunnel to get your public hostname.
 
 ```bash
-# Authenticate
-gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
-
-# Deploy
-gcloud run deploy tau-bench-green \
-  --source . \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --memory 2Gi \
-  --timeout 300
-
-# Get URL
-gcloud run services describe tau-bench-green \
-  --region us-central1 \
-  --format='value(status.url)'
+# Start cloudflared on port 8010
+cloudflared tunnel --url http://localhost:8010
 ```
 
-### Option 2: Docker
+**Copy the URL** that appears (e.g., `https://your-hostname.trycloudflare.com`).
+*Keep this terminal running.*
 
-```dockerfile
-FROM python:3.11-slim
+### 2. Start Controller
 
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
+Open a **new terminal** and start the controller, setting the `CLOUDRUN_HOST` variable to your hostname (without `https://`).
 
-EXPOSE 8010
-
-CMD ["agentbeats", "run_ctrl"]
-```
-
-Build and run:
 ```bash
-docker build -t tau-bench-green .
-docker run -d -p 8010:8010 tau-bench-green
+# Replace with YOUR hostname from Step 1
+export CLOUDRUN_HOST=your-hostname.trycloudflare.com
+
+# Start the controller
+agentbeats run_ctrl
 ```
 
-### Option 3: Manual VM
+*Keep this terminal running.*
 
-1. Provision VM with public IP
-2. Install dependencies:
+### 3. Verify & Fix Agent State
+
+Open a **third terminal** to verify the agent is running and accessible.
+
+1. **Find your Agent ID**:
    ```bash
-   pip install -r requirements.txt
+   curl -s http://localhost:8010/agents
    ```
-3. Configure systemd service:
-   ```ini
-   [Unit]
-   Description=Tau-Bench Green Agent
-   After=network.target
+   *Copy the long ID string (e.g., `ca3f0cc69394404ba8155e19127cd1d1`).*
 
-   [Service]
-   Type=simple
-   WorkingDirectory=/path/to/tau_bench_demo
-   ExecStart=/usr/local/bin/agentbeats run_ctrl
-   Restart=always
-
-   [Install]
-   WantedBy=multi-user.target
-   ```
-4. Enable and start:
+2. **Apply Manual Fix** (Required for local discovery):
    ```bash
-   sudo systemctl enable tau-bench
-   sudo systemctl start tau-bench
+   # Replace AGENT_ID with your actual ID
+   AGENT_ID=your_agent_id_here
+   
+   # Create agent card file
+   curl -s http://localhost:$(curl -s http://localhost:8010/agents | grep internal_port | awk -F': ' '{print $2}' | tr -d ',')/.well-known/agent-card.json > .ab/agents/$AGENT_ID/agent_card
+   
+   # Force state to running
+   echo "running" > .ab/agents/$AGENT_ID/state
    ```
 
-## Register on AgentBeats
+### 4. Register on AgentBeats
 
-1. Navigate to https://v2.agentbeats.org
+1. Go to [AgentBeats V2](https://v2.agentbeats.org)
 2. Click "Add Agent"
-3. Enter your controller URL (must be HTTPS)
-4. Click "Check" to verify
-5. Click "Add" to register
-
-## Verification
-
-```bash
-# Test agent card
-curl https://your-url/.well-known/agent-card.json
-
-# Test evaluation
-python test_agent.py https://your-url http://localhost:8002
-```
+3. Enter your **Controller URL**: `https://your-hostname.trycloudflare.com`
+4. Click "Check" -> "Add"
 
 ## Troubleshooting
 
-**Agent won't start**
-- Check port 8010 is available: `lsof -i :8010`
-- Verify `run.sh` is executable: `chmod +x run.sh`
+**"Agent Card URL contains a local IP address"**
+- This means `CLOUDRUN_HOST` wasn't set correctly.
+- Stop the controller (Ctrl+C).
+- Restart it with: `CLOUDRUN_HOST=your-hostname.trycloudflare.com agentbeats run_ctrl`
 
-**Controller can't find agent**
-- Ensure `HOST` and `AGENT_PORT` environment variables are set
-- Check logs for errors
+**Agent stuck in "starting" state**
+- This is a known issue with local discovery.
+- Run the "Apply Manual Fix" commands in Step 3.
 
-**HTTPS required**
-- Cloud Run provides HTTPS automatically
-- For VMs, use nginx + Let's Encrypt:
-  ```bash
-  sudo certbot --nginx -d your-domain.com
-  ```
-
-## Monitoring
-
-```bash
-# View logs (systemd)
-sudo journalctl -u tau-bench -f
-
-# View logs (Docker)
-docker logs -f tau-bench-green
-
-# View logs (Cloud Run)
-gcloud run services logs read tau-bench-green --region us-central1
-```
+**Controller URL not reachable**
+- Ensure `cloudflared` is still running.
+- Check that you copied the correct URL from Step 1.
