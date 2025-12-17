@@ -486,7 +486,7 @@ def send_message():
             
             # Format response for AgentBeats
             if not results:
-                return jsonify({"status": "error", "message": "No valid tasks executed"}), 400
+                return _create_a2a_response("❌ Error: No valid tasks executed", context_id)
                 
             # Aggregate results (using the last one for main status, similar to reference)
             last_result = results[-1]
@@ -494,17 +494,7 @@ def send_message():
             result_emoji = "✅" if success else "❌"
             
             response_text = f"Finished. White agent success: {result_emoji}\nMetrics: {json.dumps(last_result)}\n"
-            
-            # Construct A2A compliant response
-            response_data = {
-                "result": {
-                    "role": "assistant",
-                    "parts": [{"text": response_text}],
-                    "message_id": str(uuid.uuid4()),
-                    "context_id": context_id or str(uuid.uuid4())
-                }
-            }
-            return jsonify(response_data)
+            return _create_a2a_response(response_text, context_id)
 
         
         if "Run all scenarios" in message or "--all" in message:
@@ -519,10 +509,10 @@ def send_message():
                 if "white_agent_url" in tags:
                     white_agent_url = tags["white_agent_url"]
                 else:
-                    return jsonify({"error": "White agent URL not found"}), 400
+                    return _create_a2a_response("❌ Error: White agent URL not found", context_id)
             
             results = green_agent.run_all_scenarios(white_agent_url)
-            return jsonify(results)
+            return _create_a2a_response(f"Batch run complete. Results: {json.dumps(results)}", context_id)
             
         elif "Run tau-bench evaluation" in message:
             # Parse domain and scenario keys
@@ -544,14 +534,27 @@ def send_message():
                     break
             
             result = green_agent.start_evaluation(domain, scenario, white_agent_url, context_id)
-            return jsonify(result)
+            return _create_a2a_response(f"Run complete. Result: {json.dumps(result)}", context_id)
             
         else:
-            return jsonify({"error": "Unknown message format. Expected 'Run tau-bench evaluation' or 'Run all scenarios'"})
+            return _create_a2a_response("❌ Error: Unknown message format. Expected 'Run tau-bench evaluation' or 'Run all scenarios'", context_id)
             
     except Exception as e:
         logger.error(f"Error processing message: {e}", exc_info=True)
-        return jsonify({"error": str(e)})
+        # CRITICAL: Return A2A compliant error response instead of 500 to prevent client crash
+        return _create_a2a_response(f"❌ Internal Agent Error: {str(e)}", context_id)
+
+def _create_a2a_response(text: str, context_id: Optional[str]) -> Any:
+    """Helper to create a strictly compliant A2A SendMessageResponse."""
+    response_data = {
+        "result": {
+            "role": "assistant",
+            "parts": [{"text": text}],
+            "message_id": str(uuid.uuid4()),
+            "context_id": context_id or str(uuid.uuid4())
+        }
+    }
+    return jsonify(response_data)
 
 
 
