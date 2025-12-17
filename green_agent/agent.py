@@ -34,19 +34,24 @@ class GreenAgent:
             "name": "τ-bench Green Agent",
             "description": "Evaluates agents using τ-bench benchmark for tool-use capabilities in airline and retail domains",
             "version": "1.0.0",
-            "capabilities": [
-                "evaluation", 
-                "environment_management", 
-                "tool_orchestration",
-                "batch_evaluation",
-                "multi_domain_testing"
+            "url": "https://github.com/nicksaban20/Green-Agent",
+            "capabilities": {
+                "streaming": False,
+                "pushNotifications": False
+            },
+            "defaultInputModes": ["text"],
+            "defaultOutputModes": ["text"],
+            "skills": [
+                {
+                    "id": "tau-bench-evaluation",
+                    "name": "τ-bench Evaluation",
+                    "description": "Evaluate agent tool-use capabilities in airline and retail domains",
+                    "tags": ["evaluation", "benchmark", "tool-use"],
+                    "examples": ["Run tau-bench evaluation on airline domain"]
+                }
             ],
             "supported_domains": ["airline", "retail"],
-            "metrics": [
-                "success_rate",
-                "average_completion_time",
-                "turns_per_task"
-            ],
+            "metrics": ["success_rate", "average_completion_time", "turns_per_task"],
             "contact": "agentbeats@berkeley.edu"
         }
     
