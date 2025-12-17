@@ -359,7 +359,20 @@ def get_agent_card():
 def get_agent_card_well_known():
     return jsonify(green_agent.get_agent_card())
 
+@app.route('/reset', methods=['POST'])
+def reset_agent():
+    """Reset the agent state - required by AgentBeats for assessments."""
+    global green_agent
+    logger.info("Agent reset requested")
+    # Reinitialize the agent
+    domains_path = os.path.join(os.path.dirname(__file__), "..", "domains")
+    green_agent = GreenAgent(domains_path)
+    return jsonify({"status": "reset", "ready": True})
 
+@app.route('/status', methods=['GET'])
+def get_status():
+    """Return agent status - required by AgentBeats for assessments."""
+    return jsonify({"status": "running", "ready": True})
 
 
 @app.route('/send-message', methods=['POST'])
