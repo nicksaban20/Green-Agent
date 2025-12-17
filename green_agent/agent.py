@@ -548,7 +548,7 @@ def _create_a2a_response(text: str, context_id: Optional[str]) -> Any:
     """Helper to create a strictly compliant A2A SendMessageResponse."""
     response_data = {
         "result": {
-            "role": "assistant",
+            "role": "agent",
             "parts": [{"text": text}],
             "message_id": str(uuid.uuid4()),
             "context_id": context_id or str(uuid.uuid4())
