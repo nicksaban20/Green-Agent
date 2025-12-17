@@ -476,11 +476,21 @@ def send_message():
                 
             # Aggregate results (using the last one for main status, similar to reference)
             last_result = results[-1]
-            success = last_result["success"]
+            success = last_result.get("success", False)
             result_emoji = "✅" if success else "❌"
             
             response_text = f"Finished. White agent success: {result_emoji}\nMetrics: {json.dumps(last_result)}\n"
-            return jsonify({"message": response_text})
+            
+            # Construct A2A compliant response
+            response_data = {
+                "result": {
+                    "role": "assistant",
+                    "parts": [{"text": response_text}],
+                    "message_id": str(uuid.uuid4()),
+                    "context_id": context_id or str(uuid.uuid4())
+                }
+            }
+            return jsonify(response_data)
 
         
         if "Run all scenarios" in message or "--all" in message:
