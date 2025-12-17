@@ -35,15 +35,16 @@ class MockWhiteAgent:
     def process_message(self, message: str) -> str:
         self.turn_count += 1
         
-        if "airline_success_1" in message or "Book a flight to LAX" in message:
+        # Detect scenario from user goal messages (matching test_cases/*.json)
+        if "airline_success_1" in message or "Los Angeles" in message or "fly to Los Angeles" in message:
             self.current_scenario = "airline_success_1"
         elif "airline_failure_1" in message or "Cancel my flight" in message:
             self.current_scenario = "airline_failure_1"
         elif "airline_success_2" in message or "check the cancellation policy" in message:
             self.current_scenario = "airline_success_2"
-        elif "airline_failure_2" in message or "Book flight 999" in message:
+        elif "airline_failure_2" in message or "Book flight 999" in message or "flight to Mars" in message:
             self.current_scenario = "airline_failure_2"
-        elif "airline_success_3" in message or "go to NYC" in message:
+        elif "airline_success_3" in message or "go to NYC" in message or "NYC" in message:
             self.current_scenario = "airline_success_3"
         elif "retail_success_1" in message or "buy a laptop" in message:
             self.current_scenario = "retail_success_1"

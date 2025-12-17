@@ -26,7 +26,7 @@ class GreenAgent:
         self.current_env = None
         self.white_agent_url = None
         self.scenario = None
-        self.max_turns = 10
+        self.max_turns = 20
         self.context_id = None
         
     def get_agent_card(self) -> Dict[str, Any]:
@@ -88,15 +88,30 @@ class GreenAgent:
         end_time = time.time()
         
         goal_state = scenario.get('goal_state', {})
-        success = self.current_env.evaluate_success(goal_state)
+        goal_achieved = self.current_env.evaluate_success(goal_state)
         
-        logger.info(f"Evaluation complete: success={success}, turns={result.get('turns', 0)}, time={end_time - start_time:.2f}s")
+        # expected_success indicates if this is a success or failure test case
+        # Success scenarios (expected_success=True): pass when goal is achieved
+        # Failure scenarios (expected_success=False): always show as failed (they test bad behavior)
+        expected_success = scenario.get('expected_success', True)
+        
+        if expected_success:
+            # Success scenario: pass if goal was achieved
+            test_passed = goal_achieved
+        else:
+            # Failure scenario: these test cases are designed to fail
+            # They demonstrate what happens when the agent makes mistakes
+            test_passed = False
+        
+        logger.info(f"Evaluation complete: goal_achieved={goal_achieved}, expected_success={expected_success}, test_passed={test_passed}, turns={result.get('turns', 0)}, time={end_time - start_time:.2f}s")
         
         if self.current_env:
             self.current_env.close()
         
         return {
-            "success": success,
+            "success": test_passed,
+            "goal_achieved": goal_achieved,
+            "expected_success": expected_success,
             "turns": result.get('turns', 0),
             "time_used": end_time - start_time,
             "scenario": scenario_id,
@@ -178,14 +193,27 @@ class GreenAgent:
         json_match = re.search(r'<json>(.*?)</json>', response_text, re.DOTALL)
         if json_match:
             json_str = json_match.group(1).strip()
-            return json.loads(json_str)
+            # Handle newlines inside JSON strings by properly escaping them
+            # Replace literal newlines with escaped newlines for JSON parsing
+            try:
+                return json.loads(json_str)
+            except json.JSONDecodeError:
+                # Try to fix common issues with newlines in strings
+                # This handles cases where Claude puts actual newlines in message content
+                fixed_str = re.sub(r'(?<!\\)\n', r'\\n', json_str)
+                return json.loads(fixed_str)
         
         try:
             return json.loads(response_text.strip())
         except json.JSONDecodeError:
             json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
             if json_match:
-                return json.loads(json_match.group(0))
+                json_str = json_match.group(0)
+                try:
+                    return json.loads(json_str)
+                except json.JSONDecodeError:
+                    fixed_str = re.sub(r'(?<!\\)\n', r'\\n', json_str)
+                    return json.loads(fixed_str)
             raise
     
     def _run_conversation(self, scenario: Dict[str, Any]) -> Dict[str, Any]:

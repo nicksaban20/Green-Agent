@@ -1,28 +1,49 @@
 import os
 import json
 from flask import Flask, request, jsonify
+from dotenv import load_dotenv
+
+# Load environment variables from .env file in project root
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(project_root, '.env'))
+
 import anthropic
 
 app = Flask(__name__)
 
 # Initialize Anthropic client
-# Expects ANTHROPIC_API_KEY in environment variables
+# Expects ANTHROPIC_API_KEY in environment variables or .env file
 client = anthropic.Anthropic()
+SYSTEM_PROMPT = """You are a tool-calling assistant. Respond with ONLY a JSON tool call in <json>...</json> tags.
 
-SYSTEM_PROMPT = """You are a helpful assistant that can use tools.
-You have access to a set of tools. You must respond by calling these tools to help the user.
-To call a tool, you MUST wrap the JSON tool call in <json>...</json> tags.
-Do not output any other text outside of the <json> tags when calling a tool, unless you are also responding to the user with a message.
+STRICT RULES:
+1. Output ONLY: <json>{"name": "...", "kwargs": {...}}</json>
+2. NO text before or after the json block
+3. In respond_to_user, message must be UNDER 30 characters, no special punctuation
+4. Complete ALL actions before responding to user
 
-Example tool calls:
-
-1. Search for flights:
+=== AIRLINE TOOLS ===
 <json>{"name": "search_flights", "kwargs": {"destination": "LAX", "date": "2025-11-01"}}</json>
+<json>{"name": "book_flight", "kwargs": {"flight_id": 101, "user_id": 1}}</json>
+<json>{"name": "cancel_booking", "kwargs": {"booking_id": 1}}</json>
+<json>{"name": "check_policy", "kwargs": {"policy_type": "cancellation"}}</json>
 
-2. Respond to the user:
-<json>{"name": "respond_to_user", "kwargs": {"message": "I have booked your flight."}}</json>
+=== RETAIL TOOLS ===
+<json>{"name": "search_products", "kwargs": {"name": "laptop"}}</json>
+<json>{"name": "search_products", "kwargs": {"category": "Electronics"}}</json>
+<json>{"name": "place_order", "kwargs": {"customer_id": 1, "product_ids": [201], "quantities": [1]}}</json>
 
-Always use the <json> tags for tool calls.
+=== RESPOND (use short messages!) ===
+<json>{"name": "respond_to_user", "kwargs": {"message": "Flight booked!"}}</json>
+<json>{"name": "respond_to_user", "kwargs": {"message": "Order placed!"}}</json>
+<json>{"name": "respond_to_user", "kwargs": {"message": "Cannot cancel."}}</json>
+
+WORKFLOWS:
+- Book flight: search_flights -> book_flight -> respond_to_user
+- Buy product: search_products -> place_order -> respond_to_user
+- Check policy: check_policy -> respond_to_user
+
+CRITICAL: Use flight_id/product_id from tool results. Customer/user ID defaults to 1.
 """
 
 class ClaudeAgent:
@@ -36,8 +57,9 @@ class ClaudeAgent:
         self.history.append({"role": "user", "content": message})
 
         response = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=1024,
+            model="claude-sonnet-4-20250514",
+            max_tokens=2048,
+            temperature=0.0,
             system=SYSTEM_PROMPT,
             messages=self.history
         )
@@ -66,7 +88,8 @@ def send_message():
             agent.reset()
 
         response_text = agent.process_message(message)
-        return jsonify(response_text)
+        # Return as plain text, not JSON-encoded
+        return response_text, 200, {'Content-Type': 'text/plain'}
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
