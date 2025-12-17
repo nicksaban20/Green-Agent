@@ -1,11 +1,12 @@
+```python
 import json
-import time
-import requests
-import uuid
 import logging
+import uuid
 import re
+from typing import Dict, Any, Optional
+import requests
 from flask import Flask, request, jsonify
-from typing import Dict, Any, List, Optional
+from dotenv import load_dotenv, Any, List, Optional
 import os
 import sys
 
@@ -18,6 +19,11 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+def parse_tags(str_with_tags: str) -> Dict[str, str]:
+    """the target str contains tags in the format of <tag_name> ... </tag_name>, parse them out and return a dict"""
+    tags = re.findall(r"<(.*?)>(.*?)</\1>", str_with_tags, re.DOTALL)
+    return {tag: content.strip() for tag, content in tags}
 
 class GreenAgent:
     
@@ -47,7 +53,25 @@ class GreenAgent:
                     "name": "τ-bench Evaluation",
                     "description": "Evaluate agent tool-use capabilities in airline and retail domains",
                     "tags": ["evaluation", "benchmark", "tool-use"],
-                    "examples": ["Run tau-bench evaluation on airline domain"]
+                    "examples": ["""    
+Your task is to instantiate tau-bench to test the agent located at:
+<white_agent_url>
+http://localhost:8002/
+</white_agent_url>
+You should use the following env configuration:
+<env_config>
+{
+  "env": "retail",
+  "user_strategy": "llm",
+  "user_model": "claude-sonnet-4-20250514",
+  "user_provider": "anthropic",
+  "task_split": "test",
+  "task_ids": [
+    0
+  ]
+}
+</env_config>
+    """]
                 }
             ],
             "supported_domains": ["airline", "retail"],
@@ -389,6 +413,54 @@ def send_message():
         
         logger.info(f"Received message: {message[:200]}...")
         
+        # Check for AgentBeats XML tags format
+        tags = parse_tags(message)
+        if "white_agent_url" in tags and "env_config" in tags:
+            white_agent_url = tags["white_agent_url"]
+            env_config = json.loads(tags["env_config"])
+            
+            domain = env_config.get("env", "retail")
+            task_ids = env_config.get("task_ids", [0])
+            
+            # Load scenarios for the domain
+            scenario_path = os.path.join(
+                os.path.dirname(green_agent.domains_path), 
+                "test_cases", 
+                f"{domain}_scenarios.json"
+            )
+            
+            if not os.path.exists(scenario_path):
+                return jsonify({"error": f"Unknown domain: {domain}"}), 400
+                
+            with open(scenario_path, 'r') as f:
+                scenarios = json.load(f)
+            
+            results = []
+            for task_idx in task_ids:
+                if 0 <= task_idx < len(scenarios):
+                    scenario = scenarios[task_idx]
+                    scenario_id = scenario["id"]
+                    
+                    # Run evaluation
+                    logger.info(f"Running task {task_idx} (scenario: {scenario_id})")
+                    result = green_agent.start_evaluation(domain, scenario_id, white_agent_url, context_id)
+                    results.append(result)
+                else:
+                    logger.warning(f"Task index {task_idx} out of range for domain {domain}")
+            
+            # Format response for AgentBeats
+            if not results:
+                return jsonify({"status": "error", "message": "No valid tasks executed"}), 400
+                
+            # Aggregate results (using the last one for main status, similar to reference)
+            last_result = results[-1]
+            success = last_result["success"]
+            result_emoji = "✅" if success else "❌"
+            
+            response_text = f"Finished. White agent success: {result_emoji}\nMetrics: {json.dumps(last_result)}\n"
+            return jsonify({"message": response_text})
+
+        
         if "Run all scenarios" in message or "--all" in message:
             white_agent_url = None
             for line in message.split('\n'):
@@ -397,38 +469,37 @@ def send_message():
                     break
             
             if not white_agent_url:
-                return jsonify({"error": "Missing white agent URL for batch evaluation"})
+                # Try to extract from tags if mixed format
+                if "white_agent_url" in tags:
+                    white_agent_url = tags["white_agent_url"]
+                else:
+                    return jsonify({"error": "White agent URL not found"}), 400
             
-            result = green_agent.run_all_scenarios(white_agent_url)
-            return jsonify(result)
-        
-        if "Run tau-bench evaluation" in message or "Run τ-bench evaluation" in message:
-            lines = message.split('\n')
-            domain = None
-            scenario = None
-            white_agent_url = None
+            results = green_agent.run_all_scenarios(white_agent_url)
+            return jsonify(results)
             
-            for line in lines:
-                if "domain:" in line and "scenario:" in line:
-                    parts = line.split("scenario:")
-                    domain_part = parts[0].split("domain:")[1].strip().rstrip(',')
-                    scenario = parts[1].strip().rstrip('.')
-                    domain = domain_part
-                elif "domain:" in line:
-                    domain = line.split("domain:")[1].strip().rstrip('.')
-                elif "scenario:" in line:
-                    scenario = line.split("scenario:")[1].strip().rstrip('.')
-                elif "White agent URL:" in line:
+        elif "Run tau-bench evaluation" in message:
+            # Parse domain and scenario keys
+            domain = "airline" # default
+            scenario = "airline_success_1" # default
+            white_agent_url = "http://localhost:8002"
+            
+            parts = message.split(',')
+            for part in parts:
+                if "domain:" in part:
+                    domain = part.split(":")[1].strip()
+                if "scenario:" in part:
+                    scenario = part.split(":")[1].strip()
+            
+            # Also try to find URL in lines
+            for line in message.split('\n'):
+                if "White agent URL:" in line:
                     white_agent_url = line.split("White agent URL:")[1].strip()
-            
-            if not all([domain, scenario, white_agent_url]):
-                error_msg = f"Missing required parameters. Domain: {domain}, Scenario: {scenario}, URL: {white_agent_url}"
-                logger.error(error_msg)
-                return jsonify({"error": error_msg})
+                    break
             
             result = green_agent.start_evaluation(domain, scenario, white_agent_url, context_id)
             return jsonify(result)
-        
+            
         else:
             return jsonify({"error": "Unknown message format. Expected 'Run tau-bench evaluation' or 'Run all scenarios'"})
             
