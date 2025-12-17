@@ -39,7 +39,7 @@ class GreenAgent:
             "name": "τ-bench Green Agent",
             "description": "Evaluates agents using τ-bench benchmark for tool-use capabilities in airline and retail domains",
             "version": "1.0.0",
-            "url": f"https://{os.getenv('CLOUDRUN_HOST')}" if os.getenv("CLOUDRUN_HOST") else "http://localhost:8001",
+            "url": f"http://{os.getenv('HOST', '127.0.0.1')}:{int(os.getenv('AGENT_PORT', '8001'))}",
             "capabilities": {
                 "streaming": False,
                 "pushNotifications": False
