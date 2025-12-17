@@ -1,12 +1,11 @@
-```python
 import json
 import logging
 import uuid
 import re
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import requests
 from flask import Flask, request, jsonify
-from dotenv import load_dotenv, Any, List, Optional
+from dotenv import load_dotenv
 import os
 import sys
 
@@ -404,10 +403,25 @@ def get_status():
     return jsonify({"status": "running", "ready": True})
 
 
+@app.route('/', methods=['GET', 'POST'])
+def root_handler():
+    if request.method == 'GET':
+        return jsonify({"status": "running", "ready": True})
+        
+    # Handle POST - forward to send_message logic
+    return send_message()
+
 @app.route('/send-message', methods=['POST'])
 def send_message():
     try:
         data = request.get_json()
+        logger.info(f"Received data keys: {list(data.keys())}")
+        
+        # Handle JSON-RPC style wrapper if present
+        if "params" in data and "method" in data:
+            logger.info("Detected JSON-RPC format")
+            data = data["params"]
+            
         message = data.get('message', '')
         context_id = data.get('context_id')
         
