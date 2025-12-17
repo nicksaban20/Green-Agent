@@ -430,8 +430,22 @@ def send_message():
             logger.info("Detected JSON-RPC format")
             data = data["params"]
             
-        message = data.get('message', '')
+        message_obj = data.get('message', '')
         context_id = data.get('context_id')
+        
+        # Extract text from A2A message structure if it's a dict
+        if isinstance(message_obj, dict):
+            # Try to get context_id from message if not at top level
+            if not context_id:
+                context_id = message_obj.get('context_id')
+                
+            parts = message_obj.get('parts', [])
+            message = ""
+            for part in parts:
+                if 'text' in part:
+                    message += part['text']
+        else:
+            message = str(message_obj)
         
         logger.info(f"Received message: {message[:200]}...")
         
